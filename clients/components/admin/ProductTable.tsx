@@ -110,6 +110,8 @@ export default function ProductTable() {
     const [selectedRows, setSelectedRows] = useState<string[]>([]);
     const [isDeleting, setIsDeleting] = useState(false);
     const [isExporting, setIsExporting] = useState(false);
+    const [isShowingAll, setIsShowingAll] = useState(false);
+    const [allRecords, setAllRecords] = useState<Product[]>([]);
 
     // debounce search input so we don't spam the server
     const [debouncedQ, setDebouncedQ] = useState("");
@@ -138,6 +140,9 @@ export default function ProductTable() {
     const extractTotal = (d: any): number | null => d?.total ?? d?.totalItems ?? d?.count ?? d?.meta?.total ?? null;
 
     const rows = useMemo<Product[]>(() => {
+        if (isShowingAll && allRecords.length > 0) {
+            return allRecords;
+        }
         const items = extractItems(data);
         return items.map((r: any) => ({
             report_no: r.report_no,
@@ -149,7 +154,7 @@ export default function ProductTable() {
             // reportedDate: r.reportedDate,
             // description: r.description,
         } as Product));
-    }, [data]);
+    }, [data, isShowingAll, allRecords]);
 
     const totalRows = useMemo(() => {
         const t = extractTotal(data);
@@ -221,9 +226,34 @@ export default function ProductTable() {
         gridApi.current = params.api;
     }, []);
 
+    // Function to fetch all records
+    const fetchAllRecords = useCallback(async () => {
+        try {
+            const response = await apiClient.getAllReports({
+                page: 1,
+                size: 0, // Backend treats size=0 as "fetch all records"
+                q: q || undefined,
+            });
+
+            const items = extractItems(response);
+            const mappedItems = items.map((r: any) => ({
+                report_no: r.report_no,
+                style_number: r.style_number,
+            } as Product));
+
+            setAllRecords(mappedItems);
+            setIsShowingAll(true);
+            setPage(1);
+        } catch (err) {
+            console.error("[v0] Error fetching all records", err);
+            toast.error("Failed to load all records");
+        }
+    }, [q]);
+
     useEffect(() => {
         setPage(1);
         setSelectedRows([]);
+        setIsShowingAll(false);
     }, [pageSize, q]);
 
     const totalPages = totalRows ? Math.max(1, Math.ceil(totalRows / pageSize)) : null;
@@ -569,11 +599,12 @@ export default function ProductTable() {
                             {selectedRows.length} selected
                         </small>
                     )}
-                    <select value={pageSize} onChange={(e) => {
+                    <select value={isShowingAll ? "all" : pageSize} onChange={(e) => {
                         const val = e.target.value;
                         if (val === "all") {
-                            setPageSize(totalRows || 1000);
+                            fetchAllRecords();
                         } else {
+                            setIsShowingAll(false);
                             setPageSize(Number(val));
                         }
                     }}>
@@ -582,13 +613,17 @@ export default function ProductTable() {
                         <option value={100}>100</option>
                         <option value="all">All</option>
                     </select>
-                    <button onClick={() => setPage((p) => Math.max(1, p - 1))} disabled={!canPrev}>
-                        Prev
-                    </button>
-                    <span>Page {page}{totalPages ? ` of ${totalPages}` : ""}</span>
-                    <button onClick={() => setPage((p) => p + 1)} disabled={!canNext}>
-                        Next
-                    </button>
+                    {!isShowingAll && (
+                        <>
+                            <button onClick={() => setPage((p) => Math.max(1, p - 1))} disabled={!canPrev}>
+                                Prev
+                            </button>
+                            <span>Page {page}{totalPages ? ` of ${totalPages}` : ""}</span>
+                            <button onClick={() => setPage((p) => p + 1)} disabled={!canNext}>
+                                Next
+                            </button>
+                        </>
+                    )}
                 </div>
             </div>
 

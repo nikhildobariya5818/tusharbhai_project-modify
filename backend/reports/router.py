@@ -504,12 +504,21 @@ def list_reports(
         query = query.filter(Report.report_no.ilike(f"%{q}%"))
 
     total = query.count()
-    items = (
-        query.order_by(Report.created_at.desc())
-        .offset((page - 1) * size)
-        .limit(size)
-        .all()
-    )
+    
+    # Check if size is 0 or negative (client sends 0/-1 for "all" records)
+    if size <= 0:
+        # Return all records without pagination
+        items = query.order_by(Report.created_at.desc()).all()
+        actual_size = total
+    else:
+        # Apply normal pagination
+        items = (
+            query.order_by(Report.created_at.desc())
+            .offset((page - 1) * size)
+            .limit(size)
+            .all()
+        )
+        actual_size = size
 
     result_items = [
         {"report_no": r.report_no, "style_number": r.style_number}
@@ -518,7 +527,7 @@ def list_reports(
 
     return {
         "page": page,
-        "size": size,
+        "size": actual_size,
         "total": total,
         "items": result_items,
     }
