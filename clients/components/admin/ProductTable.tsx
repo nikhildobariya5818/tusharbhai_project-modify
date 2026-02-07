@@ -569,10 +569,18 @@ export default function ProductTable() {
                             {selectedRows.length} selected
                         </small>
                     )}
-                    <select value={pageSize} onChange={(e) => setPageSize(Number(e.target.value))}>
+                    <select value={pageSize} onChange={(e) => {
+                        const val = e.target.value;
+                        if (val === "all") {
+                            setPageSize(totalRows || 1000);
+                        } else {
+                            setPageSize(Number(val));
+                        }
+                    }}>
                         <option value={25}>25</option>
                         <option value={50}>50</option>
                         <option value={100}>100</option>
+                        <option value="all">All</option>
                     </select>
                     <button onClick={() => setPage((p) => Math.max(1, p - 1))} disabled={!canPrev}>
                         Prev
