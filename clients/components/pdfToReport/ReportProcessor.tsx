@@ -32,6 +32,13 @@ interface ProportionData {
   size: "small" | "large"
 }
 
+interface OffsetData {
+  top: number
+  bottom: number
+  left: number
+  right: number
+}
+
 const ReportProcessor = () => {
   const fileInputRef = useRef<HTMLInputElement>(null)
   const uploadPdfMutation = useUploadPdf()
@@ -40,6 +47,12 @@ const ReportProcessor = () => {
   const [isLoading, setIsLoading] = useState(false)
   const [pdfSize, setPdfSize] = useState<"17x11" | "14x8.5">("17x11")
   const [activeTab, setActiveTab] = useState<"standard" | "mini">("standard")
+  const [offsetData, setOffsetData] = useState<OffsetData>({
+    top: 0,
+    bottom: 0,
+    left: 0,
+    right: 0,
+  })
 
   const [proportions, setProportions] = useState<ProportionData>({
     TBL: "",
@@ -74,6 +87,13 @@ const ReportProcessor = () => {
 
   const handleProportionChange = (field: keyof ProportionData, value: string) => {
     setProportions((prev) => ({
+      ...prev,
+      [field]: value,
+    }))
+  }
+
+  const handleOffsetChange = (field: keyof OffsetData, value: number) => {
+    setOffsetData((prev) => ({
       ...prev,
       [field]: value,
     }))
@@ -120,7 +140,7 @@ const ReportProcessor = () => {
         fileName = `${mergedData.GIANATURALDIAMONDGRADINGREPORT?.GIAReportNumber}/${formattedDate}-${proportions.pdfname.trim()}.pdf`
       }
 
-      const blob = await pdf(<InvoicePDF data={mergedData} size={pdfSize} />).toBlob()
+      const blob = await pdf(<InvoicePDF data={mergedData} size={pdfSize} offsetData={offsetData} />).toBlob()
       const url = URL.createObjectURL(blob)
       const a = document.createElement("a")
       a.href = url
@@ -305,6 +325,65 @@ const ReportProcessor = () => {
                         </SelectContent>
                       </Select>
                     </div>
+                  </div>
+
+                  <div className="space-y-4 p-4 bg-accent/30 rounded-lg border border-border mt-6">
+                    <h3 className="font-semibold text-sm">Report Position Offset (in pixels)</h3>
+                    <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                      <div className="space-y-2">
+                        <Label htmlFor="offset-top" className="text-sm flex items-center gap-2">
+                          Up
+                        </Label>
+                        <Input
+                          id="offset-top"
+                          type="number"
+                          placeholder="0"
+                          value={offsetData.top}
+                          onChange={(e) => handleOffsetChange("top", parseFloat(e.target.value) || 0)}
+                          disabled={isLoading}
+                        />
+                      </div>
+                      <div className="space-y-2">
+                        <Label htmlFor="offset-bottom" className="text-sm flex items-center gap-2">
+                          Down
+                        </Label>
+                        <Input
+                          id="offset-bottom"
+                          type="number"
+                          placeholder="0"
+                          value={offsetData.bottom}
+                          onChange={(e) => handleOffsetChange("bottom", parseFloat(e.target.value) || 0)}
+                          disabled={isLoading}
+                        />
+                      </div>
+                      <div className="space-y-2">
+                        <Label htmlFor="offset-left" className="text-sm flex items-center gap-2">
+                          Left
+                        </Label>
+                        <Input
+                          id="offset-left"
+                          type="number"
+                          placeholder="0"
+                          value={offsetData.left}
+                          onChange={(e) => handleOffsetChange("left", parseFloat(e.target.value) || 0)}
+                          disabled={isLoading}
+                        />
+                      </div>
+                      <div className="space-y-2">
+                        <Label htmlFor="offset-right" className="text-sm flex items-center gap-2">
+                          Right
+                        </Label>
+                        <Input
+                          id="offset-right"
+                          type="number"
+                          placeholder="0"
+                          value={offsetData.right}
+                          onChange={(e) => handleOffsetChange("right", parseFloat(e.target.value) || 0)}
+                          disabled={isLoading}
+                        />
+                      </div>
+                    </div>
+                    <p className="text-xs text-muted-foreground">Enter values to move the report. Positive values move right/down, negative values move left/up.</p>
                   </div>
 
                   <Button type="submit" className="w-full" disabled={isLoading}>

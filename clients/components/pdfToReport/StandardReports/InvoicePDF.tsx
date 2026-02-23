@@ -9,6 +9,13 @@ import InvoicePDFSection5 from "./InvoicePDFSection5"
 import { Font } from "@react-pdf/renderer"
 import InvoicePDFSection3 from "./InvoicePDFSection3"
 import { baseFont } from "../PDFStyles"
+interface OffsetData {
+  top: number
+  bottom: number
+  left: number
+  right: number
+}
+
 const dinProRegular = "/fonts/DINPro-Light_13935.ttf"
 const dinProBold = "/fonts/DINPro-Medium_13936.ttf"
 Font.register({
@@ -76,14 +83,23 @@ const styles = StyleSheet.create({
   },
 })
 
-export default function InvoicePDF({ data, size = "17x11" }: { data: any; size?: "17x11" | "14x8.5" }) {
+export default function InvoicePDF({ 
+  data, 
+  size = "17x11",
+  offsetData 
+}: { 
+  data: any
+  size?: "17x11" | "14x8.5"
+  offsetData?: OffsetData
+}) {
+  const offsets = offsetData || { top: 0, bottom: 0, left: 0, right: 0 }
   const dimensions = size === "14x8.5" ? { width: 1008, height: 612 } : { width: 1224, height: 792 }
 
   const titleContainerStyle =
-    size === "14x8.5" ? { ...styles.titleContainer, paddingTop: "42px", marginBottom: "4px" } : styles.titleContainer
+    size === "14x8.5" ? { ...styles.titleContainer, paddingTop: "42px", marginBottom: "4px", marginTop: offsets.top - offsets.bottom, marginLeft: offsets.left - offsets.right } : { ...styles.titleContainer, marginTop: offsets.top - offsets.bottom, marginLeft: offsets.left - offsets.right }
 
   const contentRowStyle =
-    size === "14x8.5" ? { ...styles.contentRow, marginTop: "0px", marginLeft: "25px", gap: 8 } : styles.contentRow
+    size === "14x8.5" ? { ...styles.contentRow, marginTop: "0px", marginLeft: 25 + (offsets.left - offsets.right), gap: 8 } : { ...styles.contentRow, marginLeft: 112 + (offsets.left - offsets.right) }
 
   const section1Style =
     size === "14x8.5"
