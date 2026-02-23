@@ -43,10 +43,28 @@ const styles = StyleSheet.create({
   },
 })
 
-export default function InvoicePDFMini({ reports }: { reports?: any[] }) {
+interface OffsetData {
+  top: number
+  bottom: number
+  left: number
+  right: number
+}
+
+export default function InvoicePDFMini({ 
+  reports, 
+  offsetData 
+}: { 
+  reports?: any[]
+  offsetData?: OffsetData
+}) {
   const reportData = reports || sampleDatamini.reports.slice(0, 2)
+  const offsets = offsetData || { top: 0, bottom: 0, left: 0, right: 0 }
 
   const finalReports = [reportData[0] || null, reportData[1] || null]
+
+  // Calculate positions with offsets
+  const topReportTop = 0 + offsets.top - offsets.bottom
+  const bottomReportTop = 432 + offsets.top - offsets.bottom
 
   return (
     <Document>
@@ -55,10 +73,10 @@ export default function InvoicePDFMini({ reports }: { reports?: any[] }) {
         <Image src="/mimi-reports.jpg" style={styles.background} /> 
 
         {/* TOP REPORT */}
-        {finalReports[0] && <MiniReportBlock report={finalReports[0]} top={0} />}
+        {finalReports[0] && <MiniReportBlock report={finalReports[0]} top={topReportTop} offsetData={offsets} />}
 
         {/* BOTTOM REPORT  432*/}
-        {finalReports[1] && <MiniReportBlock report={finalReports[1]} top={432} />}
+        {finalReports[1] && <MiniReportBlock report={finalReports[1]} top={bottomReportTop} offsetData={offsets} />}
       </Page>
     </Document>
   )

@@ -6,6 +6,13 @@ import InvoicePDFSectionMini2 from "./InvoicePDFSectionMini2"
 import InvoicePDFSectionMini3 from "./InvoicePDFSectionMini3"
 import InvoicePDFSectionMini4 from "./InvoicePDFSectionMini4"
 
+interface OffsetData {
+  top: number
+  bottom: number
+  left: number
+  right: number
+}
+
 const styles = StyleSheet.create({
   block: {
     position: "absolute",
@@ -69,12 +76,19 @@ const styles = StyleSheet.create({
 export default function MiniReportBlock({
   report,
   top,
+  offsetData,
 }: {
   report: any
   top: number
+  offsetData?: OffsetData
 }) {
+  const offsets = offsetData || { top: 0, bottom: 0, left: 0, right: 0 }
+  
+  // Apply left/right offset to the entire block
+  const blockLeft = offsets.left - offsets.right
+  
   return (
-    <View style={[styles.block, { top }]}>
+    <View style={[styles.block, { top, left: blockLeft }]}>
       <View style={styles.titleContainer}>
         <Text style={styles.titleText}>{report.GIANATURALDIAMONDGRADINGREPORT?.GIAReportNumber}</Text>
       </View>

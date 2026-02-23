@@ -55,6 +55,13 @@ interface LocationData {
   country: string
 }
 
+interface OffsetData {
+  top: number
+  bottom: number
+  left: number
+  right: number
+}
+
 export default function MiniReportsSection() {
   const [isGenerating, setIsGenerating] = useState(false)
   const [uploadedFiles, setUploadedFiles] = useState<File[]>([])
@@ -69,6 +76,12 @@ export default function MiniReportsSection() {
     city: "Mumbai",
     state: "MH 400051",
     country: "india",
+  })
+  const [offsetData, setOffsetData] = useState<OffsetData>({
+    top: 0,
+    bottom: 0,
+    left: 0,
+    right: 0,
   })
   const fileInputRef = useRef<HTMLInputElement>(null)
 
@@ -96,6 +109,13 @@ export default function MiniReportsSection() {
 
   const handleLocationChange = (field: keyof LocationData, value: string) => {
     setLocationData((prev) => ({
+      ...prev,
+      [field]: value,
+    }))
+  }
+
+  const handleOffsetChange = (field: keyof OffsetData, value: number) => {
+    setOffsetData((prev) => ({
       ...prev,
       [field]: value,
     }))
@@ -150,7 +170,7 @@ export default function MiniReportsSection() {
     try {
       const reportsWithLocation = reports.map((report) => (report ? { ...report, ...locationData } : null))
 
-      const blob = await pdf(<InvoicePDFMini reports={reportsWithLocation} />).toBlob()
+      const blob = await pdf(<InvoicePDFMini reports={reportsWithLocation} offsetData={offsetData} />).toBlob()
       setLoadingProgress(90)
 
       const url = URL.createObjectURL(blob)
@@ -276,6 +296,65 @@ export default function MiniReportsSection() {
                 />
               </div>
             </div>
+          </div>
+
+          <div className="space-y-4 p-4 bg-accent/30 rounded-lg border border-border">
+            <h3 className="font-semibold text-sm">Report Position Offset (in pixels)</h3>
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+              <div className="space-y-2">
+                <Label htmlFor="offset-top" className="text-sm flex items-center gap-2">
+                  ⬆️ Up
+                </Label>
+                <Input
+                  id="offset-top"
+                  type="number"
+                  placeholder="0"
+                  value={offsetData.top}
+                  onChange={(e) => handleOffsetChange("top", parseFloat(e.target.value) || 0)}
+                  disabled={isLoading || isGenerating}
+                />
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="offset-bottom" className="text-sm flex items-center gap-2">
+                  ⬇️ Down
+                </Label>
+                <Input
+                  id="offset-bottom"
+                  type="number"
+                  placeholder="0"
+                  value={offsetData.bottom}
+                  onChange={(e) => handleOffsetChange("bottom", parseFloat(e.target.value) || 0)}
+                  disabled={isLoading || isGenerating}
+                />
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="offset-left" className="text-sm flex items-center gap-2">
+                  ⬅️ Left
+                </Label>
+                <Input
+                  id="offset-left"
+                  type="number"
+                  placeholder="0"
+                  value={offsetData.left}
+                  onChange={(e) => handleOffsetChange("left", parseFloat(e.target.value) || 0)}
+                  disabled={isLoading || isGenerating}
+                />
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="offset-right" className="text-sm flex items-center gap-2">
+                  ➡️ Right
+                </Label>
+                <Input
+                  id="offset-right"
+                  type="number"
+                  placeholder="0"
+                  value={offsetData.right}
+                  onChange={(e) => handleOffsetChange("right", parseFloat(e.target.value) || 0)}
+                  disabled={isLoading || isGenerating}
+                />
+              </div>
+            </div>
+            <p className="text-xs text-muted-foreground">Enter values to move the report. Positive values move right/down, negative values move left/up.</p>
           </div>
 
           <div className="border-2 border-dashed border-border rounded-lg p-6 text-center hover:bg-accent/50 transition-colors">
